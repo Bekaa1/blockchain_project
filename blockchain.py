@@ -42,38 +42,74 @@ class Block:
                 return block_hash
             nonce += 1
 
-class Blockchain: 
-    def init(self): 
-        self.chain = [] 
-        self.create_genesis_block() 
- 
-    def create_genesis_block(self): 
-        genesis_block = Block("0", ["Genesis Block"]) 
-        self.chain.append(genesis_block) 
- 
-    def add_block(self, transactions): 
-        previous_hash = self.chain[-1].hash 
-        new_block = Block(previous_hash, transactions) 
+
+class Blockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_genesis_block()
+
+    def create_genesis_block(self):
+
+        genesis_block = Block("0", ["Genesis Block"])
+        self.chain.append(genesis_block)
+
+    def add_block(self, transactions):
+
+        previous_hash = self.chain[-1].hash
+        new_block = Block(previous_hash, transactions)
         self.chain.append(new_block)
 
+    def validate_blockchain(self):
 
-def validate_blockchain(blockchain): 
-    for i in range(1, len(blockchain.chain)): 
-        current = blockchain.chain[i] 
-        previous = blockchain.chain[i - 1] 
- 
-        if current.previous_hash != previous.hash: 
-            return False 
- 
-        if current.merkle_root != current.compute_merkle_root(): 
-            return False 
- 
-        if not current.hash.startswith('0000'): 
-            return False 
- 
-    return True 
- 
-def create_transaction(sender, receiver, amount): 
+        for i in range(1, len(self.chain)):
+            current = self.chain[i]
+            previous = self.chain[i - 1]
+
+            if current.previous_hash != previous.hash:
+                return False
+
+            # Validate Merkle Root
+            if current.merkle_root != current.compute_merkle_root():
+                return False
+
+            # Validate current block hash
+            if not current.hash.startswith('0000'):
+                return False
+
+        return True
+
+
+# Create Transaction
+def create_transaction(sender, receiver, amount):
+
     return f"{sender} -> {receiver}: {amount}"
 
 
+if __name__ == "__main__":
+    blockchain = Blockchain()
+
+    transactions = [
+        create_transaction("Alice", "Bob", 10),
+        create_transaction("Bob", "Charlie", 5),
+        create_transaction("Charlie", "Dave", 20),
+        create_transaction("Dave", "Alice", 15),
+        create_transaction("Alice", "Eve", 25),
+        create_transaction("Eve", "Bob", 30),
+        create_transaction("Bob", "Charlie", 10),
+        create_transaction("Charlie", "Eve", 5),
+        create_transaction("Eve", "Alice", 50),
+        create_transaction("Alice", "Dave", 20),
+    ]
+
+    blockchain.add_block(transactions)
+
+    for i, block in enumerate(blockchain.chain):
+        print(f"Block {i}:")
+        print(f"  Previous Hash: {block.previous_hash}")
+        print(f"  Timestamp: {block.timestamp}")
+        print(f"  Merkle Root: {block.merkle_root}")
+        print(f"  Block Hash: {block.hash}\n")
+
+    # Validate the blockchain
+    is_valid = blockchain.validate_blockchain()
+    print(f"Blockchain Valid: {is_valid}")
